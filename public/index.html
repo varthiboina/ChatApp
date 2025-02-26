@@ -34,8 +34,8 @@
             const roomshelf = document.getElementById("roomshelf");
             const messageBlock = document.getElementById("messages");
             const chat = document.createElement("div");
-            console.log(message.id , socket.id);
-            if (message.id === socket.id) {              
+            
+            if (message.id === socket.id) {
                 chat.innerText = message.text;
                 chat.style.color = "green";
                 chat.style.textAlign = "right";

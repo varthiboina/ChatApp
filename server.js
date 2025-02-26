@@ -13,8 +13,7 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.id} connected`);
 
     socket.on('join room', (room) => {
-        const chatRoomId = room > socket.id ? room + socket.id : socket.id + room;
-        socket.join(chatRoomId);
+        socket.join(room);
         socket.roomId = room; 
         console.log(`User ${socket.id} joined room: ${room}`);
         socket.emit('message', {room:room , chatRoomId : chatRoomId});
