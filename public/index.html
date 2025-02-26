@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp</title>
+</head>
+<body>
+    <input type="text" id="room" placeholder="Enter Room ID">
+    <button id="join-room-btn">Join Room</button>
+    <form action="/submit" id="form">
+        <input type="text" id="input" placeholder="Enter Message">
+        <br>
+        <button type="submit" id="input-btn">Send</button>
+    </form>
+    <div id="messages"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentRoom = "";
+
+        // Join room handler
+        document.getElementById("join-room-btn").addEventListener("click", () => {
+            const room = document.getElementById("room").value;
+            if (room) {
+                currentRoom = room;
+                socket.emit("join room", room);
+            }
+        });
+
+        // Handle incoming messages
+        socket.on("message", (message) => {
+            const messageBlock = document.getElementById("messages");
+            const chat = document.createElement("div");
+            
+            if (message.id === socket.id) {
+                chat.innerText = message.text;
+                chat.style.color = "green";
+                chat.style.textAlign = "right";
+            } else if(message.text == undefined)
+            {
+                chat.innerText = message;
+                chat.style.color = "blue";
+                chat.style.textAlign = "left";
+
+            } else{
+                chat.innerText = message.text;
+                chat.style.color = "blue";
+                chat.style.textAlign = "left";
+            }
+     
+            messageBlock.append(chat);
+            messageBlock.append(document.createElement("br"));
+        });
+
+        // Send message handler
+        document.getElementById('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const messageText = document.getElementById('input').value;
+            if (messageText && currentRoom) {
+                socket.emit('chat message', { room: currentRoom, text: messageText });
+                document.getElementById('input').value = '';
+            }
+        });
+    </script>
+</body>
+</html>
