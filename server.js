@@ -10,13 +10,14 @@ app.get('/', (req, res) => {
     res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log(`User ${socket.id} connected`);
 
     socket.on('join room', (room) => {
-        socket.join(room);
+        const chatRoomId = room > socket.id ? room + socket.id : socket.id + room;
+        socket.join(chatRoomId);
         socket.roomId = room; 
         console.log(`User ${socket.id} joined room: ${room}`);
-        socket.emit('message', `You joined room: ${room}`);
+        socket.emit('message', {room:room , chatRoomId : chatRoomId});
     });
     socket.on('chat message', (msg) => {
         if (socket.roomId) {

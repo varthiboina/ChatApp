@@ -13,6 +13,7 @@
         <br>
         <button type="submit" id="input-btn">Send</button>
     </form>
+    <div id ="roomshelf"></div>
     <div id="messages"></div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -30,16 +31,21 @@
 
         // Handle incoming messages
         socket.on("message", (message) => {
+            const roomshelf = document.getElementById("roomshelf");
             const messageBlock = document.getElementById("messages");
             const chat = document.createElement("div");
-            
-            if (message.id === socket.id) {
+            console.log(message.id , socket.id);
+            if (message.id === socket.id) {              
                 chat.innerText = message.text;
                 chat.style.color = "green";
                 chat.style.textAlign = "right";
             } else if(message.text == undefined)
             {
-                chat.innerText = message;
+                const room = document.createElement("button");
+                room.innerText = message.room
+                roomshelf.append(room);
+                console.log(message.chatRoomId)
+                chat.innerText = message.room;
                 chat.style.color = "blue";
                 chat.style.textAlign = "left";
 
