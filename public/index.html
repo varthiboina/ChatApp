@@ -4,16 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #room, #input {
+            padding: 10px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #roomshelf {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        #roomshelf button {
+            background-color: #28a745;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        #messages {
+            width: 300px;
+            height: 400px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .message {
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .own-message {
+            background: #dcf8c6;
+            text-align: right;
+        }
+        .other-message {
+            background: #e8e8e8;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
     <input type="text" id="room" placeholder="Enter Room ID">
     <button id="join-room-btn">Join Room</button>
+    <div id="roomshelf"></div>
     <form action="/submit" id="form">
         <input type="text" id="input" placeholder="Enter Message">
-        <br>
         <button type="submit" id="input-btn">Send</button>
     </form>
-    <div id ="roomshelf"></div>
     <div id="messages"></div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -25,41 +85,53 @@
             const room = document.getElementById("room").value;
             if (room) {
                 currentRoom = room;
+                document.getElementById("messages").innerHTML = "";
                 socket.emit("join room", room);
             }
         });
 
         // Handle incoming messages
         socket.on("message", (message) => {
+            console.log(message.text);
             const roomshelf = document.getElementById("roomshelf");
             const messageBlock = document.getElementById("messages");
             const chat = document.createElement("div");
-            
-            if (message.id === socket.id) {
-                chat.innerText = message.text;
-                chat.style.color = "green";
-                chat.style.textAlign = "right";
-            } else if(message.text == undefined)
-            {
-                const room = document.createElement("button");
-                room.innerText = message.room
-                roomshelf.append(room);
-                console.log(message.chatRoomId)
-                chat.innerText = message.room;
-                chat.style.color = "blue";
-                chat.style.textAlign = "left";
+            chat.classList.add("message");
 
-            } else{
+            if (message.text && message.id === socket.id) {
                 chat.innerText = message.text;
-                chat.style.color = "blue";
-                chat.style.textAlign = "left";
+                chat.classList.add("own-message");
+            } else if (message.text === undefined && message.rejoin == false) {
+                const roomBtn = document.createElement("button");
+                roomBtn.setAttribute("data-value", message.room);
+                roomBtn.innerText = message.room;
+                roomshelf.append(roomBtn);
+                roomBtn.addEventListener("click", () => {
+                    currentRoom = roomBtn.dataset.value;
+                    messageBlock.innerHTML = "";
+                    socket.emit("rejoin", currentRoom);
+                    console.log(`Switched to room: ${currentRoom}`);
+                }
+            );
+                chat.innerText = `Room: ${message.room}`;
+                chat.classList.add("other-message");
+
+            } else if (message.text === undefined && message.rejoin == true) {
+                const roomBtn = document.createElement("button");
+                roomBtn.setAttribute("data-value", message.room);
+                roomBtn.innerText = message.room;
+                chat.innerText = `Room: ${message.room}`;
+                chat.classList.add("other-message");
+
+            } 
+            else if (message.text && message.id !== socket.id) {
+                chat.innerText = message.text;
+                chat.classList.add("other-message");
             }
-     
+
             messageBlock.append(chat);
             messageBlock.append(document.createElement("br"));
         });
-
-        // Send message handler
         document.getElementById('form').addEventListener('submit', (e) => {
             e.preventDefault();
             const messageText = document.getElementById('input').value;
