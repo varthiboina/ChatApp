@@ -8,27 +8,29 @@ exports.websocket = (app, server) => {
     io.on('connection', (socket) => {
         console.log(`User ${socket.id} connected`);
         socket.on('rejoin',(room) =>
-        {
-            const chatRoomId = room > socket.id ? room + socket.id : socket.id + room;
+        { 
+            const chatRoomId = room.myId > room.friendId ? room.myId + room.friendId : room.friendId + room.myId;
             socket.join(chatRoomId);
             socket.room = room;
             socket.roomId = chatRoomId;
-            console.log(`User ${socket.id} joined room: ${chatRoomId}`);
+            console.log(`User ${room.myId} joined room: ${chatRoomId}`);
             socket.emit('message', { room:room, rejoin:true });
+            
         });
         socket.on('join room', (room) => {
-            const chatRoomId = room > socket.id ? room + socket.id : socket.id + room;
+            const chatRoomId = room.myId > room.friendId ? room.myId + room.friendId : room.friendId + room.myId;
             socket.join(chatRoomId);
             createChat(chatRoomId);
+            socket.myId = room.myId;
+            socket.friendId = room.friendId;
             socket.roomId = chatRoomId;
-            console.log(`User ${socket.id} joined room: ${chatRoomId}`);
-            socket.emit('message', { room:room, rejoin:false });
+            console.log(`User ${room.myId} joined room: ${chatRoomId}`);
+            socket.emit('message', { room:chatRoomId, rejoin:false });
         });
         socket.on('chat message', (msg) => {
             if (socket.roomId) {
                 const chatMessage = new Message({text : msg.text , received : false , seen : false , timestamp : Date.now()})
-                addToChat(socket.roomId,chatMessage,socket.room , socket.id)
-                //console.log(`Message from ${socket.id} in room ${socket.roomId}: ${msg.text}`);
+                addToChat(socket.roomId,chatMessage,socket.friendId , socket.myId)
                 io.to(socket.roomId).emit('message', { id: socket.id, text: msg.text });
 
             } else {

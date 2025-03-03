@@ -4,67 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatApp</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        #room, #input {
-            padding: 10px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 10px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #roomshelf {
-            margin-top: 10px;
-            display: flex;
-            gap: 5px;
-        }
-        #roomshelf button {
-            background-color: #28a745;
-            padding: 8px;
-            border-radius: 5px;
-        }
-        #messages {
-            width: 300px;
-            height: 400px;
-            overflow-y: auto;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-        .message {
-            padding: 8px;
-            border-radius: 5px;
-            margin-bottom: 5px;
-        }
-        .own-message {
-            background: #dcf8c6;
-            text-align: right;
-        }
-        .other-message {
-            background: #e8e8e8;
-            text-align: left;
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
     <input type="text" id="room" placeholder="Enter Room ID">
@@ -77,16 +17,17 @@
     <div id="messages"></div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const myId = JSON.parse(decodeURIComponent(urlParams.get('data')));
         const socket = io();
         let currentRoom = "";
-
         // Join room handler
         document.getElementById("join-room-btn").addEventListener("click", () => {
-            const room = document.getElementById("room").value;
-            if (room) {
-                currentRoom = room;
+            const friendId = document.getElementById("room").value;
+            if (friendId) {
+                
                 document.getElementById("messages").innerHTML = "";
-                socket.emit("join room", room);
+                socket.emit("join room", {myId: myId,friendId : friendId });
             }
         });
 
@@ -97,6 +38,7 @@
             const messageBlock = document.getElementById("messages");
             const chat = document.createElement("div");
             chat.classList.add("message");
+            const roomId = '';
 
             if (message.text && message.id === socket.id) {
                 chat.innerText = message.text;
@@ -105,6 +47,7 @@
                 const roomBtn = document.createElement("button");
                 roomBtn.setAttribute("data-value", message.room);
                 roomBtn.innerText = message.room;
+                currentRoom = message.room;
                 roomshelf.append(roomBtn);
                 roomBtn.addEventListener("click", () => {
                     currentRoom = roomBtn.dataset.value;

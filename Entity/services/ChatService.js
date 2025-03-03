@@ -16,7 +16,6 @@ exports.createChat = async (chatId) => {
     }
 };
 
-
 exports.addToChat = async (chatId, messageData, roomId, socketId) => {
     try {
         // Create and save the new message
