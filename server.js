@@ -7,7 +7,9 @@ const path = require('path');
 const mongodbModule = require('./config/db');
 const {userCreation}  = require('./codes/create_user');
 const {loginlogic}  = require('./codes/login');
-
+const {verifyJwt} = require('./verifyJwt');
+const {refreshTokenLogic} = require('./codes/refreshToken');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -16,16 +18,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 const server = createServer(app);
 mongodbModule.mongoDBConnect();
+app.use(express.json());
 websocket(app, server);
+app.use(cookieParser());
 
 app.get('/welcome',(req,res) =>
     {
         res.render('welcomePage', {appName : "ChatApp"});
     })
-app.get('/chat', (req, res) => {
-    const data = JSON.parse(decodeURIComponent(req.query.data));
-    res.sendFile(join(__dirname, './public/index.html'));
-});
+app.get('/refreshToken', refreshTokenLogic );
 app.post('/create-user', userCreation, (req, res) => {
     const { username, email } = req.body;
     const newUser = { username, email };
@@ -33,10 +34,7 @@ app.post('/create-user', userCreation, (req, res) => {
     // res.render('userCreated', { user: newUser });
 });
 app.post('/login', loginlogic, (req, res) => {
-    const { username, email } = req.body;
-    const newUser = { username, email };
-    console.log('Login Successful');
-    // res.render('userCreated', { user: newUser });
+    console.log('Request body:', req.body);
 });
 
 app.get('/create-user', (req, res) => {
@@ -45,6 +43,18 @@ app.get('/create-user', (req, res) => {
 app.get('/login', (req, res) => {
     res.render('login');
 });
+
+app.get('/chat', verifyJwt, (req, res) => {
+    console.log("hello : " + req.cookies.accessToken);
+//    const data = JSON.parse(decodeURIComponent(req.query.data));
+ //   if(!data)
+  //  {
+        res.sendFile(join(__dirname, './public/index.html'));
+  //  }
+
+   // res.sendFile(join(__dirname, './public/index.html'));
+});
+
 server.listen(9000, () => {
     console.log('Server running at http://localhost:9000');
 });

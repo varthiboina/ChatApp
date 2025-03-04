@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>Login</h1>
-        <form action="/login" method="POST">
+        <form id="loginForm">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             
@@ -19,5 +19,43 @@
             <button type="submit">Login</button>
         </form>
     </div>
+
+    <script>
+        // Add event listener for form submission
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Make the login request
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.accessToken) {
+                    // After login, fetch chat data and render the chat page
+                    fetch('/chat', {
+                        method: 'GET',
+                        credentials: 'include' // Send cookies with the request
+                    })
+                    .then(response => response.text()) // Get HTML response (not JSON)
+                    .then(chatHtml => {
+                        // Insert the HTML response into the DOM
+                        document.body.innerHTML = chatHtml; // Replace current page with chat page content
+                        // Optionally, you can also manipulate the DOM here (e.g., insert user ID in chat)
+                        const userId = data.userId;
+                        window.history.pushState({}, '', `/chat?data=${userId}`); // You can use it inside the chat page
+                    })
+                    .catch(err => console.error('Chat Error:', err));
+                } else {
+                    console.error('Login failed:', data.message);
+                }
+            })
+            .catch(err => console.error('Login Error:', err));
+        });
+    </script>
 </body>
 </html>
